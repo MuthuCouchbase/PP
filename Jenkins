@@ -1,2 +1,5 @@
-PP
-==
+THis would run the server
+java -jar "C:\Users\mkoteeswaran\Downloads\jenkins.war"
+This would invoke the CLI help options
+java -jar "C:\Users\mkoteeswaran\Downloads\jenkins-cli.jar" -s http://localhost:8080 help
+
