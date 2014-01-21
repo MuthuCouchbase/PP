@@ -1,0 +1,43 @@
+]#!/usr/bin/perl
+use strict;
+use warnings;
+my @abcd_directories = ("/x/opt/abcd/var/lib/yoda", "/x/opt/abcd/var/log/", "/x/opt/abcd/lib/");
+my $componentsFile = "/x/opt/abcd/var/lib/yoda/targetstate/TS.xml";
+my($component, $installUser, $installLocation) = undef;
+print"==================Checking Yoda Directories==================\n";
+foreach(@abcd_directories) {
+        my $command = "find $_ \! -user abcd";
+        my $returnValue = `$command`;
+        if(defined $returnValue && $returnValue !~ /^$/ &&
+                $returnValue !~ /  */) {
+                print $returnValue."\n";
+        }
+}
+
+print"==================Checking other directories==================\n";
+open(FILE, "<" , $componentsFile) or die "Couldn't open file for reading\n";
+while(my $line = <FILE>) {
+        chomp($line);
+        my $return = undef;
+        if ($line =~ /<install_location>([^<]+)/) {
+                $installLocation = $1;
+        }
+        if ($line =~ /<component>([^<]+)/) {
+                $component = $1;
+        }
+        if ($line =~ /<install_user>([^<]+)/) {
+                $installUser = $1;
+        }
+        if(defined $component && defined $installUser &&
+                defined $installLocation && (-d $installLocation.$component)) {
+                my $command = "find $installLocation$component \! -user $installUser";
+                $return = `$command`;
+                if(defined $return && $return !~ /^$/ &&
+                        $return !~ /status\.sh/ && $return !~ /  */) {
+                        print $return."\n";
+                }
+        }
+        ($component, $installUser, $installLocation) = undef if($line =~ /<\/package>/);
+}
+
+close(FILE) or warn "Couldn't close file - $!\n";
