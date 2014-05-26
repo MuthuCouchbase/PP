@@ -1,0 +1,123 @@
+#!usr/local/bin/perl
+
+use Data::Dumper;
+
+##### $opt_stage is one input
+##### $opt_components is one input (  comma separated compos)
+####### BUILD ID input
+my $opt_stage="$ARGV[0]";
+my $opt_components="$ARGV[1]";
+my $UPPER_STAGE = uc($opt_stage);
+my $SSH="/usr/local/bin/ssh";
+#print " $UPPER_STAGE before\n";
+
+my $check = `$SSH $opt_stage ls "$UPPER_STAGE/STAGE2.default.topo"`;
+
+#print "after ssh \n";
+        chomp($check);
+        if($check) {
+        my $cal_hash ={};
+        my $topo_hash ={};
+        my @cal_package_list = ();
+        my @components = ();
+        #/var/tmp/cal_log_dependent_file.txt /var/tmp/topo
+        my $cal1 = file_parser("cal_log_dependent_file1.txt", "\n");
+        my $topo1 = file_parser("default.topo", "\n%");
+        my @components1 =();
+        if ($opt_components) {
+        @components = split(/,/,$opt_components);
+        @components1 = split(/,/,$opt_components);
+        my $installed_comps = getInstalledComponents();
+        foreach my $component(@components) {
+            my $dependencies = merge_topo_cal_dependencies($cal1, $topo1, $component);
+            if(@$dependencies) {
+                     my $value;
+                     foreach (@$installed_comps) {
+                          #$_ =~ /^([^\d]+)\-\d+/;
+                          $value .= $_."|";
+                     }
+                     $value =~ s/\|$//g;
+                     $value =~ s/\-/\\-/g;
+                     foreach (@$dependencies) {
+                          if($value !~ /$_/) {
+                              push(@components1, $_);
+                          }
+                     }
+            }
+         }
+        }
+        my $result = join(',', @components1);
+        print  "$result\n" ;
+    }#End of Check Block
+        ##Parse cal_log_dependent_file.txt
+        ###Parse default.topo
+        ###
+sub file_parser {
+    my $file = shift;
+    $/ = shift;
+    my $package1;
+    open(FILE, "<", $file);
+    while(my $lines = <FILE>) {
+        my @topo_package_list = ();
+        chomp($lines);
+        if ($file =~ /topo/) {
+            my (@list) = split("\t", $lines);
+            $package1 = $list[0];
+            chomp($package1);
+            $package1 =~ s/\%|\n//g;
+            foreach(my $i=1; $i < scalar(@list); $i++) {
+               if($list[$i] =~ /([^\_\s]+)_host/) {
+                   push(@topo_package_list,$1);
+               }
+            }
+            $topo_hash->{$package1} = \@topo_package_list if(defined $package1 && scalar(@topo_package_list)!=0);
+        }
+        elsif ($file =~ /cal/) {
+            my ($package2, $cal_package_list) = split(":",$lines);
+            my @cal_packages = split(",",$cal_package_list);
+            $cal_hash->{$package2} = \@cal_packages if (defined $package2 && scalar(@cal_packages)!=0);
+        }
+    }
+    return $topo_hash if ($file =~ /topo/);
+    return $cal_hash if ($file =~ /cal/);
+    close(FILE);
+}
+
+sub merge_topo_cal_dependencies {
+     my($cal, $topo, $comp) = @_;
+     my @dep_array =();
+     foreach my $key1(keys %{$cal}) {
+         if($key1 eq $comp) {
+             foreach my $value (@{$cal->{$key1}}) {
+                 push(@dep_array,$value);
+             }
+         }
+     }
+     foreach my $key2(keys %{$topo}) {
+         if($key2 eq $comp) {
+             foreach my $value2 (@{$topo->{$key2}}) {
+                 push(@dep_array,$value2);
+             }
+         }
+     }
+     my @dependency_array = keys %{{ map { $_ => 1 } @dep_array }};
+     #$package_dep_hash->{$comp} = \@dependency_array;
+     return \@dependency_array;
+}
+
+sub getInstalledComponents {
+     my $installed_comps = `$SSH $opt_stage interface -f`;
+     chomp($installed_comps);
+     my @installed =();
+     my(@list) = split(",",$installed_comps);
+     foreach(@list) {
+         my($component, $status) = split(":",$_);
+         $component =~ s/\{|\'//g;
+         $status =~ s/\{|\'|\s//g;
+         my $component1 = $1 if ($component =~ /\/([^\s\/]+rpm)/);
+         if($status =~ /success/) {
+             push(@installed, $component1);
+         }
+     }
+     return \@installed;
+}
