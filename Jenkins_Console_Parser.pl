@@ -7,17 +7,16 @@ my $end = $ARGV[1];
 my $job = $ARGV[2];
 print "JobName Total_Runs Total_Failures SUCCESS_PERCENTAGE\n";
 if(!$start || !$end || !$job) {
-print "Usage: perl Jenkins_Console_Parser.pl 991 1015 MS_rqa-BAT\n";
 die "Provide start iteration number, end iteration number and jobName space delimited\n";
 }
 my $DIR = "/x/hudson/jobs/$job/builds";
 for(my $i = $start; $i<=$end; $i++) {
 if( -d $DIR) {
 `strings "$DIR/$i/log" > /var/tmp/abcd`;
-my $output = `grep 'Tests run: ' /var/tmp/abcd| grep -v '^Test'`;
+my $output = `grep -E 'totalTest|Tests run: ' /var/tmp/abcd| grep -v '^Test'`;
 `rm /var/tmp/abcd`;
 chomp($output);
-if($output =~ /Tests run: (\d+), Failures: (\d+)/) {
+if($output =~ /Tests run: (\d+), Failures: (\d+)/ || $output=~ /"totalTest":"(\d+)", "failedTest":"(\d+)"/) {
 $total+=$1;
 $failures+=$2;
 }
