@@ -7,6 +7,7 @@ my $end = $ARGV[1];
 my $job = $ARGV[2];
 print "JobName Total_Runs Total_Failures SUCCESS_PERCENTAGE\n";
 if(!$start || !$end || !$job) {
+print "Usage perl Jenkins_Console_Parser.pl 991 1035 live_stagevalidation\n";
 die "Provide start iteration number, end iteration number and jobName space delimited\n";
 }
 my $DIR = "/x/hudson/jobs/$job/builds";
