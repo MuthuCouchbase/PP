@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+#perl /var/tmp/sample.pl /var/tmp/b | sort -u > /var/tmp/result
 use strict;
 use warnings;
 my $file = $ARGV[0];
