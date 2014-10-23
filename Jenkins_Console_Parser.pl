@@ -26,7 +26,7 @@ $failures+=$2;
 if($line =~ /Service Health check is called on the host\s*([^\s\!]+).*?services not running on the stage.*?=([^=]+).*?Checking the health of the  OCC/) {
    print "$1::$2\n";
 }
-if($line =~ /The health check failed for the service ([^\s]+) on node ([^\s]+) for port \d+$/){
+if($line =~ /The health check failed for the service ([^\s]+) on node ([^\s]+) for port \d+!/){
    print "$2::$1\n";
 }
 `rm /var/tmp/abcd`;
