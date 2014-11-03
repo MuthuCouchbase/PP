@@ -32,5 +32,5 @@ if($line =~ /The health check failed for the service ([^\s]+) on node ([^\s]+) f
 `rm /var/tmp/abcd`;
 }
 }
-my $percentage = (($total-$failures)/$total)*100;
+sprintf("%.2f",(($total-$failures)/$total)*100);
 print "$job $total $failures $percentage"."%\n";
