@@ -1,0 +1,13 @@
+
+
+Easiest way I find is to:
+
+    Right click project
+
+    Debug as -> Maven build ...
+
+    In the goals field put -Dmaven.surefire.debug test
+
+    In the parameters put a new parameter called forkMode with a value of never
+
+Set your breakpoints down and run this configuration and it should hit the breakpoint.
