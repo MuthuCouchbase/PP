@@ -1,0 +1,13 @@
+Use Microsoft Azure
+Provide a Website name
+First do git init to make git track the files
+Except node_modules, do a git add and commit of the files
+then run npm init that will create a package.json file which will have the dependencies you need and then checkin that file.
+Then do git remote add "Endpoint of the Git Repo that is there in Azure"
+git remote add remoteName https://abcd@express-intro.scm.azurewebsites.net:443/express-intro.git
+git push azure master
+http://www.express-intro.azurewebsites.net
+Keep in mind that in azure, we cannot listen to 1337
+instead modify the code to
+var port = process.env.PORT || 1337;
+app.listen(port, function{});
